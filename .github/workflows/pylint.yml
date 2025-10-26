@@ -1,17 +1,13 @@
-name: Pylint Check
+name: Daily Pallawan API Test
 
 on:
-  push:
-    paths:
-      - '**/*.py'
-  pull_request:
-    paths:
-      - '**/*.py'
-  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * *'  # Runs daily at 6:00 UTC (9:30 AM Tehran time)
+  workflow_dispatch:      # Allows manual trigger from GitHub UI
 
 jobs:
-  lint:
-    name: Run Pylint
+  run-tests:
+    name: Run API Tests and Email Report
     runs-on: ubuntu-latest
 
     steps:
@@ -24,7 +20,16 @@ jobs:
           python-version: '3.12'
 
       - name: 📦 Install dependencies
-        run: pip install pylint
+        run: pip install requests pylint
+
+      - name: 🧪 Run API tests and send email
+        env:
+          EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          EMAIL_RECIPIENT: ${{ secrets.EMAIL_RECIPIENT }}
+        run: |
+          cd ${{ github.workspace }}
+          python daily_api_test.py
 
       - name: 🧹 Run pylint if Python files exist
         run: |
