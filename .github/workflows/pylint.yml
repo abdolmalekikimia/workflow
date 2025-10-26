@@ -1,13 +1,17 @@
-name: Daily Pallawan API Test
+name: Pylint Check
 
 on:
-  schedule:
-    - cron: '0 6 * * *'  # Runs daily at 6:00 UTC (9:30 AM Tehran time)
-  workflow_dispatch:      # Allows manual trigger from GitHub UI
+  push:
+    paths:
+      - '**/*.py'
+  pull_request:
+    paths:
+      - '**/*.py'
+  workflow_dispatch:
 
 jobs:
-  run-tests:
-    name: Run API Tests and Email Report
+  lint:
+    name: Run Pylint
     runs-on: ubuntu-latest
 
     steps:
@@ -20,20 +24,12 @@ jobs:
           python-version: '3.12'
 
       - name: 📦 Install dependencies
-        run: pip install requests
-
-      - name: 🧪 Run API tests and send email
-        env:
-          EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
-          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
-          EMAIL_RECIPIENT: ${{ secrets.EMAIL_RECIPIENT }}
-        run: python daily_api_test.py
+        run: pip install pylint
 
       - name: 🧹 Run pylint if Python files exist
         run: |
           FILES=$(git ls-files '*.py')
           if [ -n "$FILES" ]; then
-            pip install pylint
             pylint $FILES || echo "⚠️ Pylint completed with warnings"
           else
             echo "No Python files to lint: skipping."
