@@ -2,28 +2,38 @@ name: Daily Pallawan API Test
 
 on:
   schedule:
-    - cron: '0 6 * * *'  # 9:30 AM Tehran time
-  workflow_dispatch:
+    - cron: '0 6 * * *'  # Runs daily at 6:00 UTC (9:30 AM Tehran time)
+  workflow_dispatch:      # Allows manual trigger from GitHub UI
 
 jobs:
   run-tests:
+    name: Run API Tests and Email Report
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: ✅ Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: 🐍 Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
-      - name: Install dependencies
+      - name: 📦 Install dependencies
         run: pip install requests
 
-      - name: Run API tests and send email
+      - name: 🧪 Run API tests and send email
         env:
           EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
           EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
           EMAIL_RECIPIENT: ${{ secrets.EMAIL_RECIPIENT }}
         run: python daily_api_test.py
+
+      - name: 🧹 Run pylint if Python files exist
+        run: |
+          FILES=$(git ls-files '*.py')
+          if [ -n "$FILES" ]; then
+            pip install pylint
+            pylint $FILES || echo "⚠️ Pylint completed with warnings"
+          else
+            echo "No Python files to lint: skipping."
